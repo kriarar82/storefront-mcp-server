@@ -24,10 +24,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY src/ ./src/
 COPY run_server.py .
 COPY run_server_container.py .
-COPY run_server_simple.py .
-COPY run_server_mcp_http.py .
-COPY run_server_mcp_http_v2.py .
-COPY run_server_http_with_mcp_info.py .
 COPY run_server_fastapi.py .
 COPY pyproject.toml .
 COPY setup.py .
