@@ -22,7 +22,8 @@ from mcp.types import (
     LoggingLevel
 )
 
-from .config import ServerConfig, DEFAULT_CONFIG
+from .config import ServerConfig, DEFAULT_CONFIG, Environment
+from .config_utils import get_config, validate_config, setup_logging, get_environment_info
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -43,9 +44,10 @@ class ProductInfo:
 class ProductServiceClient:
     """Client for communicating with the Java microservice"""
     
-    def __init__(self, base_url: str = "http://localhost:8080"):
-        self.base_url = base_url.rstrip('/')
-        self.client = httpx.AsyncClient(timeout=30.0)
+    def __init__(self, config: ServerConfig):
+        self.config = config
+        self.base_url = config.product_service_url.rstrip('/')
+        self.client = httpx.AsyncClient(timeout=config.product_service_timeout)
     
     async def close(self):
         """Close the HTTP client"""
@@ -65,15 +67,21 @@ class ProductServiceClient:
             logger.error(f"Unexpected error fetching product {product_id}: {e}")
             return None
     
-    async def search_products(self, query: str, category: Optional[str] = None, 
-                            limit: int = 10) -> List[ProductInfo]:
-        """Search for products"""
+    async def search_products(self, query: str, filter: Optional[str] = None, 
+                            top: int = 10) -> List[ProductInfo]:
+        """Search for products using POST with request body"""
         try:
-            params = {"q": query, "limit": limit}
-            if category:
-                params["category"] = category
+            request_body = {
+                "query": query,
+                "top": top
+            }
+            if filter:
+                request_body["filter"] = filter
             
-            response = await self.client.get(f"{self.base_url}/api/products/search", params=params)
+            response = await self.client.post(
+                f"{self.base_url}/api/products/search", 
+                json=request_body
+            )
             response.raise_for_status()
             data = response.json()
             
@@ -150,10 +158,19 @@ class ProductMCPServer:
     def __init__(self, config: ServerConfig = None):
         if config is None:
             config = DEFAULT_CONFIG
+        
+        # Validate configuration
+        if not validate_config(config):
+            raise ValueError("Invalid configuration provided")
+        
         self.config = config
         self.server = Server(config.server_name)
-        self.product_client = ProductServiceClient(config.product_service_url)
+        self.product_client = ProductServiceClient(config)
         self._setup_handlers()
+        
+        # Log environment info
+        env_info = get_environment_info(config)
+        logger.info(f"Starting MCP server with configuration: {env_info}")
     
     def _setup_handlers(self):
         """Set up MCP server handlers"""
@@ -186,11 +203,11 @@ class ProductMCPServer:
                                 "type": "string",
                                 "description": "Search query for products"
                             },
-                            "category": {
+                            "filter": {
                                 "type": "string",
-                                "description": "Optional category filter"
+                                "description": "Optional filter expression (e.g., \"category eq 'Electronics' and price gt 100\")"
                             },
-                            "limit": {
+                            "top": {
                                 "type": "integer",
                                 "description": "Maximum number of products to return (default: 10)",
                                 "default": 10
@@ -254,10 +271,10 @@ class ProductMCPServer:
                     if not query:
                         return [TextContent(type="text", text="Error: query is required")]
                     
-                    category = arguments.get("category")
-                    limit = arguments.get("limit", 10)
+                    filter_expr = arguments.get("filter")
+                    top = arguments.get("top", 10)
                     
-                    products = await self.product_client.search_products(query, category, limit)
+                    products = await self.product_client.search_products(query, filter_expr, top)
                     if products:
                         return [TextContent(
                             type="text",
@@ -356,10 +373,7 @@ Stock Quantity: {product.stock_quantity}"""
                     InitializationOptions(
                         server_name="product-info-server",
                         server_version="1.0.0",
-                        capabilities=self.server.get_capabilities(
-                            notification_options=None,
-                            experimental_capabilities={}
-                        )
+                        capabilities={}
                     )
                 )
         finally:
@@ -367,7 +381,13 @@ Stock Quantity: {product.stock_quantity}"""
 
 async def main():
     """Main entry point"""
-    config = ServerConfig.from_env()
+    # Get configuration based on environment
+    config = get_config()
+    
+    # Set up logging based on configuration
+    setup_logging(config)
+    
+    # Create and run server
     server = ProductMCPServer(config)
     await server.run()
 

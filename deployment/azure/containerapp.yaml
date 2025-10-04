@@ -1,0 +1,63 @@
+apiVersion: 2022-10-01
+kind: ContainerApp
+metadata:
+  name: mcp-server
+  location: East US
+properties:
+  environmentId: /subscriptions/{subscription-id}/resourceGroups/{resource-group}/providers/Microsoft.App/managedEnvironments/{environment-name}
+  configuration:
+    ingress:
+      external: false
+      targetPort: 8080
+    registries:
+    - server: {container-registry}.azurecr.io
+      username: {registry-username}
+      passwordSecretRef: registry-password
+  template:
+    containers:
+    - name: mcp-server
+      image: {container-registry}.azurecr.io/mcp-server:latest
+      resources:
+        cpu: 0.5
+        memory: 1Gi
+      env:
+      - name: PRODUCT_SERVICE_URL
+        value: "http://java-microservice:8080"
+      - name: PRODUCT_SERVICE_TIMEOUT
+        value: "30"
+      - name: MCP_SERVER_NAME
+        value: "product-info-server"
+      - name: MCP_SERVER_VERSION
+        value: "1.0.0"
+      - name: LOG_LEVEL
+        value: "INFO"
+      probes:
+      - type: Liveness
+        httpGet:
+          path: /health
+          port: 8080
+        initialDelaySeconds: 30
+        periodSeconds: 30
+        timeoutSeconds: 10
+        failureThreshold: 3
+      - type: Readiness
+        httpGet:
+          path: /health
+          port: 8080
+        initialDelaySeconds: 10
+        periodSeconds: 10
+        timeoutSeconds: 5
+        failureThreshold: 3
+    scale:
+      minReplicas: 1
+      maxReplicas: 10
+      rules:
+      - name: cpu-scaling
+        custom:
+          type: cpu
+          metadata:
+            type: Utilization
+            value: "70"
+
+
+

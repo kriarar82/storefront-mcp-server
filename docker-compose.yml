@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # Java microservice (mock for testing)
+  java-microservice:
+    image: mockserver/mockserver:latest
+    ports:
+      - "8080:1080"
+    environment:
+      MOCKSERVER_SERVER_PORT: 1080
+      MOCKSERVER_LOG_LEVEL: INFO
+    command: ["-serverPort", "1080", "-logLevel", "INFO"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # MCP Server
+  mcp-server:
+    build: .
+    depends_on:
+      java-microservice:
+        condition: service_healthy
+    env_file:
+      - config/env.docker
+    environment:
+      - PRODUCT_SERVICE_URL=http://java-microservice:1080
+      - ENVIRONMENT=docker
+    volumes:
+      - ./src:/app/src:ro
+      - ./config:/app/config:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "python", "-c", "import sys; sys.path.insert(0, '/app/src'); from product_mcp.config_utils import get_config, validate_config; config = get_config('docker'); print('Config valid:', validate_config(config))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  default:
+    name: mcp-network

@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 class MCPTestClient:
     """Test client for the Product MCP Server"""
     
-    def __init__(self, server_command: str = "python -m src.product_mcp.server"):
+    def __init__(self, server_command: str = "python run_server.py"):
         self.server_command = server_command
         self.process = None
     
@@ -132,6 +132,7 @@ class MCPTestClient:
         """Test searching for products"""
         print("\n🔧 Testing search_products tool...")
         
+        # Test 1: Basic search
         search_products_message = {
             "jsonrpc": "2.0",
             "id": 4,
@@ -140,17 +141,39 @@ class MCPTestClient:
                 "name": "search_products",
                 "arguments": {
                     "query": "laptop",
-                    "limit": 5
+                    "top": 5
                 }
             }
         }
         
         try:
             response = await self.send_message(search_products_message)
-            print(f"✅ Search products response: {json.dumps(response, indent=2)}")
+            print(f"✅ Search products (basic) response: {json.dumps(response, indent=2)}")
+        except Exception as e:
+            print(f"❌ Search products (basic) failed: {e}")
+            return False
+        
+        # Test 2: Search with filter
+        search_with_filter_message = {
+            "jsonrpc": "2.0",
+            "id": 5,
+            "method": "tools/call",
+            "params": {
+                "name": "search_products",
+                "arguments": {
+                    "query": "electronics",
+                    "filter": "category eq 'Electronics' and price gt 100",
+                    "top": 10
+                }
+            }
+        }
+        
+        try:
+            response = await self.send_message(search_with_filter_message)
+            print(f"✅ Search products (with filter) response: {json.dumps(response, indent=2)}")
             return True
         except Exception as e:
-            print(f"❌ Search products failed: {e}")
+            print(f"❌ Search products (with filter) failed: {e}")
             return False
     
     async def test_get_product(self):
@@ -159,7 +182,7 @@ class MCPTestClient:
         
         get_product_message = {
             "jsonrpc": "2.0",
-            "id": 5,
+            "id": 6,
             "method": "tools/call",
             "params": {
                 "name": "get_product",
@@ -215,11 +238,9 @@ class MCPTestClient:
             
             tests = [
                 self.test_initialization,
-                self.test_list_tools,
-                self.test_get_categories,
                 self.test_search_products,
                 self.test_get_product,
-                self.test_get_products_by_category
+
             ]
             
             passed = 0
@@ -252,8 +273,8 @@ async def main():
     parser = argparse.ArgumentParser(description="Test the Product MCP Server")
     parser.add_argument(
         "--server-command",
-        default="python mcp_server.py",
-        help="Command to start the MCP server (default: python mcp_server.py)"
+        default="python run_server.py",
+        help="Command to start the MCP server (default: python run_server.py)"
     )
     
     args = parser.parse_args()

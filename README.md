@@ -54,15 +54,51 @@ cp env.example .env
 
 ## Configuration
 
-The server can be configured using environment variables:
+The server supports environment-based configuration with automatic detection and validation. See [CONFIGURATION.md](CONFIGURATION.md) for detailed information.
+
+### Quick Start
+
+The server automatically detects the environment and loads appropriate settings:
+
+```bash
+# Development (default)
+python -m src.product_mcp.server
+
+# Production
+ENVIRONMENT=production python -m src.product_mcp.server
+
+# Docker
+ENVIRONMENT=docker python -m src.product_mcp.server
+```
+
+### Configuration Management
+
+Use the built-in CLI for configuration management:
+
+```bash
+# Validate current configuration
+python -m src.product_mcp.config_cli validate
+
+# Show current configuration
+python -m src.product_mcp.config_cli show
+
+# Create environment template
+python -m src.product_mcp.config_cli create-template production
+```
+
+### Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
+| `ENVIRONMENT` | `development` | Environment name (development, production, test, docker) |
+| `DEBUG` | `false` | Enable debug mode |
 | `PRODUCT_SERVICE_URL` | `http://localhost:8080` | URL of the Java microservice |
 | `PRODUCT_SERVICE_TIMEOUT` | `30` | Timeout for HTTP requests in seconds |
 | `MCP_SERVER_NAME` | `product-info-server` | Name of the MCP server |
 | `MCP_SERVER_VERSION` | `1.0.0` | Version of the MCP server |
 | `LOG_LEVEL` | `INFO` | Logging level |
+| `HOST` | `localhost` | Host to bind to |
+| `PORT` | `8000` | Port to listen on |
 
 ## Usage
 
