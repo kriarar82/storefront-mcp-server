@@ -68,7 +68,7 @@ class ProductServiceClient:
             return None
     
     async def search_products(self, query: str, filter: Optional[str] = None, 
-                            top: int = 10) -> List[ProductInfo]:
+                            top: int = 2) -> List[ProductInfo]:
         """Search for products using POST with request body"""
         try:
             request_body = {
@@ -138,14 +138,21 @@ class ProductServiceClient:
     def _parse_product(self, data: Dict[str, Any]) -> Optional[ProductInfo]:
         """Parse product data from the microservice response"""
         try:
+            # Handle both old and new API response formats
+            product_id = data.get("product_id") or data.get("id", "")
+            product_name = data.get("product_name") or data.get("name", "")
+            description = data.get("sku_description") or data.get("description", "")
+            category = data.get("category_name") or data.get("category", "")
+            stock_quantity = data.get("stockQuantity", 0)
+            
             return ProductInfo(
-                id=str(data.get("id", "")),
-                name=data.get("name", ""),
-                description=data.get("description", ""),
+                id=str(product_id),
+                name=product_name,
+                description=description,
                 price=float(data.get("price", 0.0)),
-                category=data.get("category", ""),
-                stock_quantity=int(data.get("stockQuantity", 0)),
-                image_url=data.get("imageUrl"),
+                category=category,
+                stock_quantity=int(stock_quantity),
+                image_url=data.get("imageUrl") or data.get("image_url"),
                 specifications=data.get("specifications", {})
             )
         except (ValueError, KeyError) as e:
