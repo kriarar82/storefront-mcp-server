@@ -1,0 +1,100 @@
+# Example Tool Mappings for Different Use Cases
+# Copy and modify this file for your specific microservice
+
+# E-commerce API Example
+mappings:
+  # Product operations
+  get_product:
+    endpoint: "/api/products/{product_id}"
+    method: "GET"
+    description: "Get product details by ID"
+    required_params: ["product_id"]
+    optional_params: ["include_reviews", "include_variants"]
+    response_parser: "parse_product"
+
+  search_products:
+    endpoint: "/api/products/search"
+    method: "POST"
+    description: "Search products with filters"
+    required_params: ["query"]
+    optional_params: ["category", "price_min", "price_max", "sort_by", "limit"]
+    response_parser: "parse_products_list"
+
+  get_products_by_category:
+    endpoint: "/api/products/category/{category}"
+    method: "GET"
+    description: "Get products by category"
+    required_params: ["category"]
+    optional_params: ["limit", "offset", "sort_by"]
+    response_parser: "parse_products_list"
+
+  # Category operations
+  get_categories:
+    endpoint: "/api/categories"
+    method: "GET"
+    description: "Get all product categories"
+    required_params: []
+    optional_params: ["include_counts"]
+    response_parser: "parse_categories"
+
+  # Order operations
+  get_order:
+    endpoint: "/api/orders/{order_id}"
+    method: "GET"
+    description: "Get order details by ID"
+    required_params: ["order_id"]
+    optional_params: ["include_items"]
+    response_parser: "parse_order"
+
+  create_order:
+    endpoint: "/api/orders"
+    method: "POST"
+    description: "Create a new order"
+    required_params: ["items", "customer_id"]
+    optional_params: ["shipping_address", "payment_method", "notes"]
+    response_parser: "parse_order"
+
+  # User operations
+  get_user:
+    endpoint: "/api/users/{user_id}"
+    method: "GET"
+    description: "Get user profile"
+    required_params: ["user_id"]
+    optional_params: ["include_orders", "include_preferences"]
+    response_parser: "parse_user"
+
+  # Generic passthrough
+  generic_request:
+    endpoint: "/api/{path}"
+    method: "POST"
+    description: "Generic API request passthrough"
+    required_params: ["path"]
+    optional_params: ["method", "body", "params", "headers"]
+    response_parser: null
+
+# Response parsers for e-commerce data
+response_parsers:
+  parse_product:
+    type: "single_item"
+    id_field: "product_id"
+    data_fields: ["name", "description", "price", "category", "stock_quantity", "image_url"]
+
+  parse_products_list:
+    type: "list"
+    list_field: "products"
+    item_fields: ["product_id", "name", "price", "category", "stock_quantity"]
+
+  parse_categories:
+    type: "list"
+    list_field: "categories"
+    item_fields: ["category_id", "name", "description", "product_count"]
+
+  parse_order:
+    type: "single_item"
+    id_field: "order_id"
+    data_fields: ["status", "total", "items", "customer_id", "created_at", "shipping_address"]
+
+  parse_user:
+    type: "single_item"
+    id_field: "user_id"
+    data_fields: ["username", "email", "first_name", "last_name", "preferences"]

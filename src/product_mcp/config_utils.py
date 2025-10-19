@@ -86,7 +86,7 @@ def get_environment_info(config: ServerConfig) -> Dict[str, Any]:
         "debug": config.debug,
         "server_name": config.server_name,
         "server_version": config.server_version,
-        "product_service_url": config.product_service_url,
+        "service_url": config.service_url,
         "log_level": config.log_level,
         "host": config.host,
         "port": config.port,

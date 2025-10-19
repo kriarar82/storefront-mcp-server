@@ -1,0 +1,87 @@
+{
+  "mappings": {
+    "get_item": {
+      "endpoint": "/api/items/{id}",
+      "method": "GET",
+      "description": "Get a specific item by ID",
+      "required_params": ["id"],
+      "optional_params": [],
+      "response_parser": "parse_item"
+    },
+    "get_categories": {
+      "endpoint": "/api/categories",
+      "method": "GET",
+      "description": "Get all available categories",
+      "required_params": [],
+      "optional_params": [],
+      "response_parser": "parse_categories"
+    },
+    "get_items_by_category": {
+      "endpoint": "/api/items/category/{category}",
+      "method": "GET",
+      "description": "Get items by category",
+      "required_params": ["category"],
+      "optional_params": ["limit", "offset"],
+      "response_parser": "parse_items_list"
+    },
+    "search_items": {
+      "endpoint": "/apparel/semantic-search",
+      "method": "POST",
+      "description": "Search items with filters",
+      "required_params": ["query"],
+      "optional_params": ["filter", "top", "sort_by"],
+      "response_parser": "parse_items_list"
+    },
+    "get_user": {
+      "endpoint": "/api/users/{user_id}",
+      "method": "GET",
+      "description": "Get user information by ID",
+      "required_params": ["user_id"],
+      "optional_params": ["include_profile"],
+      "response_parser": "parse_user"
+    },
+    "create_order": {
+      "endpoint": "/api/orders",
+      "method": "POST",
+      "description": "Create a new order",
+      "required_params": ["items", "user_id"],
+      "optional_params": ["shipping_address", "notes"],
+      "response_parser": "parse_order"
+    },
+    "generic_request": {
+      "endpoint": "/api/{path}",
+      "method": "POST",
+      "description": "Generic API request passthrough",
+      "required_params": ["path"],
+      "optional_params": ["method", "body", "params", "headers"],
+      "response_parser": null
+    }
+  },
+  "response_parsers": {
+    "parse_item": {
+      "type": "single_item",
+      "id_field": "id",
+      "data_fields": ["name", "description", "price", "category"]
+    },
+    "parse_categories": {
+      "type": "list",
+      "list_field": "categories",
+      "item_fields": ["id", "name", "description"]
+    },
+    "parse_items_list": {
+      "type": "list",
+      "list_field": "items",
+      "item_fields": ["id", "name", "price", "category"]
+    },
+    "parse_user": {
+      "type": "single_item",
+      "id_field": "user_id",
+      "data_fields": ["username", "email", "profile"]
+    },
+    "parse_order": {
+      "type": "single_item",
+      "id_field": "order_id",
+      "data_fields": ["status", "total", "items", "created_at"]
+    }
+  }
+}

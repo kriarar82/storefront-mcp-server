@@ -114,8 +114,20 @@ az containerapp create \
         SENTRY_DSN=${SENTRY_DSN:-your-sentry-dsn-here} \
     --cpu 0.5 \
     --memory 1Gi \
-    --min-replicas 1 \
-    --max-replicas 10 \
+    --min-replicas 0 \
+    --max-replicas 1 \
+    --output table
+
+# Configure scaling rules
+echo "⚙️  Configuring scaling rules..."
+az containerapp update \
+    --name $CONTAINER_APP_NAME \
+    --resource-group $RESOURCE_GROUP \
+    --min-replicas 0 \
+    --max-replicas 1 \
+    --scale-rule-name "cpu-scaling" \
+    --scale-rule-type "cpu" \
+    --scale-rule-metadata "type=Utilization,value=70" \
     --output table
 
 echo "✅ Deployment completed successfully!"

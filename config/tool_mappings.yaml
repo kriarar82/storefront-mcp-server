@@ -1,0 +1,105 @@
+# Tool Mappings Configuration
+# This file defines how MCP tools map to microservice API endpoints
+# 
+# Format:
+# - tool_name: The name of the MCP tool
+#   endpoint: The API endpoint pattern (supports {param} substitution)
+#   method: HTTP method (GET, POST, PUT, DELETE)
+#   description: Human-readable description of the tool
+#   required_params: List of required parameters
+#   optional_params: List of optional parameters
+#   response_parser: Optional parser function name for response processing
+
+mappings:
+  # Product operations
+  get_item:
+    endpoint: "/api/products/{id}"
+    method: "GET"
+    description: "Get a specific product by ID"
+    required_params: ["id"]
+    optional_params: []
+    response_parser: "parse_item"
+
+  # Category operations
+  get_categories:
+    endpoint: "/api/products/categories"
+    method: "GET"
+    description: "Get all available product categories"
+    required_params: []
+    optional_params: []
+    response_parser: "parse_categories"
+
+  # Product filtering
+  get_items_by_category:
+    endpoint: "/api/products/category/{category}"
+    method: "GET"
+    description: "Get products by category"
+    required_params: ["category"]
+    optional_params: ["limit", "offset"]
+    response_parser: "parse_items_list"
+
+  # Search operations
+  search_items:
+    endpoint: "/api/products/search"
+    method: "POST"
+    description: "Search products with filters"
+    required_params: ["query"]
+    optional_params: ["filter", "top", "sort_by"]
+    response_parser: "parse_items_list"
+    param_types:
+      top: "integer"
+
+  # User operations (example)
+  get_user:
+    endpoint: "/api/users/{user_id}"
+    method: "GET"
+    description: "Get user information by ID"
+    required_params: ["user_id"]
+    optional_params: ["include_profile"]
+    response_parser: "parse_user"
+
+  # Order operations (example)
+  create_order:
+    endpoint: "/api/orders"
+    method: "POST"
+    description: "Create a new order"
+    required_params: ["items", "user_id"]
+    optional_params: ["shipping_address", "notes"]
+    response_parser: "parse_order"
+
+  # Generic request passthrough (always available)
+  generic_request:
+    endpoint: "/api/{path}"
+    method: "POST"
+    description: "Generic API request passthrough"
+    required_params: ["path"]
+    optional_params: ["method", "body", "params", "headers"]
+    response_parser: null
+
+# Response parsers configuration
+# Define how different response types should be parsed
+response_parsers:
+  parse_item:
+    type: "single_item"
+    id_field: "id"
+    data_fields: ["name", "description", "price", "category"]
+
+  parse_categories:
+    type: "list"
+    list_field: "categories"
+    item_fields: ["id", "name", "description"]
+
+  parse_items_list:
+    type: "list"
+    list_field: "items"
+    item_fields: ["id", "name", "price", "category"]
+
+  parse_user:
+    type: "single_item"
+    id_field: "user_id"
+    data_fields: ["username", "email", "profile"]
+
+  parse_order:
+    type: "single_item"
+    id_field: "order_id"
+    data_fields: ["status", "total", "items", "created_at"]

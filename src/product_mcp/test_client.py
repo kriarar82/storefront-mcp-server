@@ -128,52 +128,28 @@ class MCPTestClient:
             print(f"❌ Get categories failed: {e}")
             return False
     
-    async def test_search_products(self):
-        """Test searching for products"""
-        print("\n🔧 Testing search_products tool...")
+    async def test_get_item(self):
+        """Test getting a specific item"""
+        print("\n🔧 Testing get_item tool...")
         
-        # Test 1: Basic search
-        search_products_message = {
+        get_item_message = {
             "jsonrpc": "2.0",
             "id": 4,
             "method": "tools/call",
             "params": {
-                "name": "search_products",
+                "name": "get_item",
                 "arguments": {
-                    "query": "laptop",
-                    "top": 5
+                    "id": "1"
                 }
             }
         }
         
         try:
-            response = await self.send_message(search_products_message)
-            print(f"✅ Search products (basic) response: {json.dumps(response, indent=2)}")
-        except Exception as e:
-            print(f"❌ Search products (basic) failed: {e}")
-            return False
-        
-        # Test 2: Search with filter
-        search_with_filter_message = {
-            "jsonrpc": "2.0",
-            "id": 5,
-            "method": "tools/call",
-            "params": {
-                "name": "search_products",
-                "arguments": {
-                    "query": "electronics",
-                    "filter": "category eq 'Electronics' and price gt 100",
-                    "top": 10
-                }
-            }
-        }
-        
-        try:
-            response = await self.send_message(search_with_filter_message)
-            print(f"✅ Search products (with filter) response: {json.dumps(response, indent=2)}")
+            response = await self.send_message(get_item_message)
+            print(f"✅ Get item response: {json.dumps(response, indent=2)}")
             return True
         except Exception as e:
-            print(f"❌ Search products (with filter) failed: {e}")
+            print(f"❌ Get item failed: {e}")
             return False
     
     async def test_get_product(self):
@@ -200,16 +176,16 @@ class MCPTestClient:
             print(f"❌ Get product failed: {e}")
             return False
     
-    async def test_get_products_by_category(self):
-        """Test getting products by category"""
-        print("\n🔧 Testing get_products_by_category tool...")
+    async def test_get_items_by_category(self):
+        """Test getting items by category"""
+        print("\n🔧 Testing get_items_by_category tool...")
         
-        get_products_by_category_message = {
+        get_items_by_category_message = {
             "jsonrpc": "2.0",
             "id": 6,
             "method": "tools/call",
             "params": {
-                "name": "get_products_by_category",
+                "name": "get_items_by_category",
                 "arguments": {
                     "category": "electronics",
                     "limit": 3
@@ -218,11 +194,111 @@ class MCPTestClient:
         }
         
         try:
-            response = await self.send_message(get_products_by_category_message)
-            print(f"✅ Get products by category response: {json.dumps(response, indent=2)}")
+            response = await self.send_message(get_items_by_category_message)
+            print(f"✅ Get items by category response: {json.dumps(response, indent=2)}")
             return True
         except Exception as e:
-            print(f"❌ Get products by category failed: {e}")
+            print(f"❌ Get items by category failed: {e}")
+            return False
+    
+    async def test_search_items(self):
+        """Test search_items tool"""
+        print("\n🔧 Testing search_items tool...")
+        
+        # Test 1: Basic search
+        search_message = {
+            "jsonrpc": "2.0",
+            "id": 7,
+            "method": "tools/call",
+            "params": {
+                "name": "search_items",
+                "arguments": {
+                    "query": "laptop",
+                    "top": 5
+                }
+            }
+        }
+        
+        try:
+            response = await self.send_message(search_message)
+            print(f"✅ Search items (basic) response: {json.dumps(response, indent=2)}")
+        except Exception as e:
+            print(f"❌ Search items (basic) failed: {e}")
+            return False
+        
+        # Test 2: Search with filters
+        search_with_filters_message = {
+            "jsonrpc": "2.0",
+            "id": 8,
+            "method": "tools/call",
+            "params": {
+                "name": "search_items",
+                "arguments": {
+                    "query": "gaming",
+                    "filter": "electronics",
+                    "top": 10,
+                    "sort_by": "price"
+                }
+            }
+        }
+        
+        try:
+            response = await self.send_message(search_with_filters_message)
+            print(f"✅ Search items (with filters) response: {json.dumps(response, indent=2)}")
+            return True
+        except Exception as e:
+            print(f"❌ Search items (with filters) failed: {e}")
+            return False
+
+    async def test_generic_api(self):
+        """Test generic API passthrough"""
+        print("\n🔧 Testing generic_api tool...")
+        
+        # Test 1: GET request to categories
+        generic_api_message = {
+            "jsonrpc": "2.0",
+            "id": 9,
+            "method": "tools/call",
+            "params": {
+                "name": "generic_api",
+                "arguments": {
+                    "path": "categories",
+                    "method": "GET"
+                }
+            }
+        }
+        
+        try:
+            response = await self.send_message(generic_api_message)
+            print(f"✅ Generic API (GET categories) response: {json.dumps(response, indent=2)}")
+        except Exception as e:
+            print(f"❌ Generic API (GET categories) failed: {e}")
+            return False
+        
+        # Test 2: POST request to search
+        generic_search_message = {
+            "jsonrpc": "2.0",
+            "id": 10,
+            "method": "tools/call",
+            "params": {
+                "name": "generic_api",
+                "arguments": {
+                    "path": "items/search",
+                    "method": "POST",
+                    "body": {
+                        "query": "laptop",
+                        "top": 5
+                    }
+                }
+            }
+        }
+        
+        try:
+            response = await self.send_message(generic_search_message)
+            print(f"✅ Generic API (POST search) response: {json.dumps(response, indent=2)}")
+            return True
+        except Exception as e:
+            print(f"❌ Generic API (POST search) failed: {e}")
             return False
     
     async def run_all_tests(self):
@@ -238,9 +314,11 @@ class MCPTestClient:
             
             tests = [
                 self.test_initialization,
-                self.test_search_products,
-                self.test_get_product,
-
+                self.test_get_item,
+                self.test_get_categories,
+                self.test_get_items_by_category,
+                self.test_search_items,
+                self.test_generic_api
             ]
             
             passed = 0
